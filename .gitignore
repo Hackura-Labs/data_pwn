@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+env/
+
+# Data Pwn Output
+data_pwn_*/
+*.log
+*.sql
+*.dump
+*db.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
