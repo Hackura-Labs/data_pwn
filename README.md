@@ -1,6 +1,6 @@
 # 🔥 Data Pwn - Ultimate Data Extraction Tool
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/yourusername/data-pwn)
+[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Hackura-Labs/data_pwn)
 [![Kali](https://img.shields.io/badge/Kali-Recommended-green.svg)](https://www.kali.org/)
 [![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
@@ -160,15 +160,15 @@ pip3 install -r requirements.txt
 ### Option 1: One-Line Install (Linux)
 
 ```bash
-curl -s https://raw.githubusercontent.com/hackura/data-pwn/main/install.sh | bash
+curl -s https://raw.githubusercontent.com/Hackura-Labs/data_pwn/main/install.sh | bash
 ```
 
 ### Option 2: Manual Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/hackura/data-pwn.git
-cd data-pwn
+git clone https://github.com/Hackura-Labs/data_pwn.git
+cd data_pwn
 
 # Create virtual environment
 python3 -m venv venv
@@ -683,7 +683,7 @@ Report saved to: data_pwn_example_com_20260126_120000/report.txt
 ```bash
 # Install missing tools
 sudo apt update
-sudo apt install nmap sqlmap hydra gobuster wpscan nikto
+sudo apt install nmap masscan sqlmap hydra gobuster wpscan nikto
 
 # Or run without Kali tools (fallback mode)
 python3 data_pwn.py -t target.com
@@ -848,8 +848,8 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ```bash
 # Clone repository
-git clone https://github.com/hackura/data-pwn.git
-cd data-pwn
+git clone https://github.com/Hackura-Labs/data_pwn.git
+cd data_pwn
 
 # Create virtual environment
 python3 -m venv venv
@@ -934,8 +934,8 @@ See [LEGAL.md](LEGAL.md) for complete legal disclaimer.
 
 ## 📞 Support
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/data-pwn/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/data-pwn/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Hackura-Labs/data_pwn/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/Hackura-Labs/data_pwn/discussions)
 - **Email**: 
 - **Twitter**: @
 

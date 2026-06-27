@@ -51,8 +51,8 @@ Data Pwn is a comprehensive penetration testing tool designed to extract data fr
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/data-pwn.git
-cd data-pwn
+git clone https://github.com/Hackura-Labs/data_pwn.git
+cd data_pwn
 
 # Install dependencies
 pip install -r requirements.txt
@@ -989,7 +989,7 @@ A: Report them securely and delete them after testing. Never share them publicly
 
 - **Email**: [EMAIL_ADDRESS]
 - **Twitter**: @DataPwnTool
-- **GitHub**: github.com/hackura/data-pwn
+- **GitHub**: github.com/Hackura-Labs/data_pwn
 
 ---
 

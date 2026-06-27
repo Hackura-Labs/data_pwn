@@ -1,9 +1,3 @@
-
----
-
-## 📄 requirements.txt
-
-```txt
 # Data Pwn - Python Dependencies
 # ================================
 # Core Requirements
