@@ -1,9 +1,10 @@
 # 🔥 Data Pwn - Ultimate Data Extraction Tool
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/Hackura-Labs/data_pwn)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/Hackura-Labs/data_pwn)
 [![Kali](https://img.shields.io/badge/Kali-Recommended-green.svg)](https://www.kali.org/)
 [![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)](https://www.python.org/)
 [![License](https://img.shields.io/badge/License-MIT-red.svg)](LICENSE)
+[![Architecture](https://img.shields.io/badge/Architecture-Modular%20Package-purple.svg)]()
 
 > **Professional penetration testing tool for external data extraction through multiple attack vectors.**
 
@@ -12,6 +13,8 @@
 ## 📋 Table of Contents
 
 - [Overview](#-overview)
+- [What's New in v2.0](#-whats-new-in-v20)
+- [Project Structure](#-project-structure)
 - [Features](#-features)
 - [Prerequisites](#-prerequisites)
 - [Installation](#-installation)
@@ -35,6 +38,8 @@ Data Pwn is a comprehensive, menu-driven penetration testing tool designed for s
 
 - ✅ Web Application Attacks (SQLi, LFI, Config Leaks)
 - ✅ Service Attacks (SSH, RDP, Database Brute Force)
+- ✅ Internal Network Discovery and Pivoting
+- ✅ Privilege Escalation Checks (Linux & Windows)
 - ✅ Credential Harvesting
 - ✅ Multi-Database Support (MySQL, PostgreSQL, MSSQL, MongoDB, Redis)
 - ✅ Automated Data Extraction
@@ -43,10 +48,73 @@ Data Pwn is a comprehensive, menu-driven penetration testing tool designed for s
 ### Why Data Pwn?
 
 - **All-in-One**: Combines multiple attack vectors in a single tool
+- **Modular Package**: Clean Python package structure — extend without breaking existing code
 - **Kali Integration**: Leverages existing Kali tools for maximum efficiency
 - **User-Friendly**: Interactive menu system with clear output
 - **Professional**: Comprehensive logging and reporting
 - **Ethical**: Built for authorized penetration testing
+
+---
+
+## 🆕 What's New in v2.0
+
+Data Pwn has been fully refactored from a monolithic script into a **clean Python package**.
+
+| Change | v1.x | v2.0 |
+|--------|-------|------|
+| Architecture | Single `data_pwn.py` file | Full modular package |
+| Entry points | `python3 data_pwn.py` | `python3 data_pwn.py` or `python3 main.py` |
+| CLI logic | Mixed with core | Isolated in `cli.py` |
+| Scanner | Embedded in main class | `core/scanner.py` |
+| Logging | Mixed with tool | `core/reporter.py` |
+| Web attacks | Embedded | `modules/external/web.py` |
+| Service attacks | Embedded | `modules/external/services.py` |
+| Recon | Embedded | `modules/external/recon.py` |
+| Internal discovery | Not present | `modules/internal/discovery.py` |
+| Pivoting | Not present | `modules/internal/pivot.py` |
+| Privilege escalation | Not present | `modules/internal/priv_esc.py` |
+| DB extraction | Embedded | `modules/extraction/databases.py` |
+| File extraction | Embedded | `modules/extraction/files.py` |
+| Network utils | Not present | `utils/network.py` |
+| Wordlist management | Not present | `utils/wordlists.py` |
+
+---
+
+## 📁 Project Structure
+
+```
+data_pawn/
+├── data_pwn.py                  # Original entry point (backward compatible)
+├── main.py                      # Clean entry point
+├── cli.py                       # Argument parsing
+├── config.py                    # All configuration (ports, wordlists, paths)
+├── __init__.py
+├── __main__.py                  # Enables: python3 -m data_pwn
+│
+├── core/
+│   ├── __init__.py
+│   ├── base.py                  # DataPwn controller class
+│   ├── scanner.py               # Port scanning & service detection
+│   └── reporter.py              # Logger with color-coded output
+│
+├── modules/
+│   ├── external/
+│   │   ├── recon.py             # nmap, DNS lookup, whatweb fingerprinting
+│   │   ├── web.py               # SQLi, gobuster, exposed config files
+│   │   └── services.py          # SSH + database brute force
+│   ├── internal/
+│   │   ├── discovery.py         # Ping sweep, internal port scan
+│   │   ├── pivot.py             # SMB enum, SSH hopping, LDAP/AD
+│   │   └── priv_esc.py          # SUID/SGID, sudo, kernel vuln checks
+│   └── extraction/
+│       ├── databases.py         # mysqldump, pg_dump, etc.
+│       └── files.py             # SSH data mining, config extraction
+│
+└── utils/
+    ├── helpers.py               # Color class, file & JSON utilities
+    ├── network.py               # DNS resolve, port check, local IP
+    └── wordlists.py             # Wordlist loading & availability checks
+```
 
 ---
 
@@ -64,6 +132,10 @@ Data Pwn is a comprehensive, menu-driven penetration testing tool designed for s
 | **Credential Harvesting** | Finds passwords in config files and services |
 | **Data Extraction** | Dumps databases, configs, and sensitive files |
 | **Comprehensive Reporting** | Detailed reports with findings and recommendations |
+| **Internal Discovery** | Ping sweep, ARP scan, internal port scanning |
+| **Pivoting** | SMB enum, SSH hopping, LDAP/AD enumeration |
+| **Privilege Escalation** | SUID/SGID, sudo, kernel vuln detection |
+| **Modular Architecture** | Add new attack vectors without touching core code |
 
 ### Database Support
 
@@ -196,6 +268,9 @@ python3 data_pwn.py -t example.com -a
 
 # Stealth mode (slow and low)
 python3 data_pwn.py -t example.com -a --stealth
+
+# Use the clean entry point
+python3 main.py -t example.com -a
 ```
 
 ### First Run Example
@@ -473,21 +548,35 @@ find /var/www -name "*.php" -o -name "*.conf" | grep -E "(config|database)"
 
 ## ⚙️ Configuration
 
+All configuration is centralized in `config.py`. Edit it directly to change global settings.
+
 ### Custom Wordlists
 
-Edit `Config.WORDLISTS` in `data_pwn.py`:
+Edit `Config.WORDLISTS` in `config.py`:
 
 ```python
-Config.WORDLISTS = {
-    'rockyou': '/path/to/rockyou.txt',
-    'dirbuster': '/path/to/dirbuster.txt',
-    'subdomains': '/path/to/subdomains.txt',
-    'unix_users': '/path/to/unix_users.txt',
-    'windows_users': '/path/to/windows_users.txt',
-    'mysql_users': '/path/to/mysql_users.txt',
-    'postgres_users': '/path/to/postgres_users.txt',
-    'mssql_users': '/path/to/mssql_users.txt'
-}
+# config.py
+class Config:
+    WORDLISTS = {
+        'rockyou': '/path/to/rockyou.txt',
+        'dirbuster': '/path/to/dirbuster.txt',
+        'subdomains': '/path/to/subdomains.txt',
+        'unix_users': '/path/to/unix_users.txt',
+        'windows_users': '/path/to/windows_users.txt',
+        'mysql_users': '/path/to/mysql_users.txt',
+        'postgres_users': '/path/to/postgres_users.txt',
+        'mssql_users': '/path/to/mssql_users.txt'
+    }
+```
+
+You can also use `utils/wordlists.py` programmatically:
+
+```python
+from utils.wordlists import WordlistManager
+
+wl = WordlistManager()
+print(wl.available())          # List available wordlists
+passwords = wl.load('rockyou') # Load into a list
 ```
 
 ### Stealth Mode Settings
@@ -856,10 +945,7 @@ python3 -m venv venv
 source venv/bin/activate
 
 # Install development dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-pytest tests/
+pip install -r requirements.txt
 ```
 
 ### Contribution Guidelines
@@ -879,17 +965,28 @@ pytest tests/
 
 ### Development Roadmap
 
-#### v1.1.0 (Coming Soon)
+#### v2.0.0 ✅ Released
+- [x] Full modular Python package restructure
+- [x] `core/` — scanner, reporter, base controller
+- [x] `modules/external/` — recon, web, services
+- [x] `modules/internal/` — discovery, pivot, priv_esc
+- [x] `modules/extraction/` — databases, files
+- [x] `utils/` — helpers, network, wordlists
+- [x] Clean CLI separation (`cli.py`)
+- [x] Backward-compatible `data_pwn.py` entry point
+
+#### v2.1.0 (Coming Soon)
 - [ ] HTML report generation
 - [ ] Proxy support
-- [ ] More database types
-- [ ] Multi-threading optimization
+- [ ] PostgreSQL full extraction (`pg_dump`)
+- [ ] MongoDB extraction (`mongodump`)
+- [ ] Redis key extraction
 
-#### v2.0.0 (Planned)
+#### v3.0.0 (Planned)
 - [ ] GUI interface
 - [ ] Cloud platform integration
-- [ ] API support
-- [ ] Plugin system
+- [ ] API/REST support
+- [ ] Plugin system for community modules
 
 ---
 
@@ -912,7 +1009,7 @@ This software includes or depends on third-party tools and libraries:
 
 ### Attribution
 
-Data Pwn was created by @Hackurax.
+Data Pwn was created by @Hackura Labs.
 Special thanks to the open-source security community.
 
 ---
@@ -936,8 +1033,8 @@ See [LEGAL.md](LEGAL.md) for complete legal disclaimer.
 
 - **Issues**: [GitHub Issues](https://github.com/Hackura-Labs/data_pwn/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/Hackura-Labs/data_pwn/discussions)
-- **Email**: 
-- **Twitter**: @
+- **Email**: lab@hackura.app
+- **Twitter**: https://x.com/HackuraLabs
 
 ---
 
@@ -962,7 +1059,7 @@ See [LEGAL.md](LEGAL.md) for complete legal disclaimer.
 
 ---
 
-**Version**: 1.0.0
+**Version**: 2.0.0
 **Last Updated**: June 2026  
 **Status**: Active Development
 

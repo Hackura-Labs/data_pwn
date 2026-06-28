@@ -1,6 +1,6 @@
 # 📖 Data Pwn - User Guide
 
-> **Complete guide to using Data Pwn for external penetration testing and data extraction.**
+> **Complete guide to using Data Pwn v2.0 for external and internal penetration testing and data extraction.**
 
 ---
 
@@ -56,16 +56,16 @@ cd data_pwn
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Make executable
-chmod +x data_pwn.py
 ```
 
 ### First Run
 
 ```bash
-# Run with a target
+# Run with the original entry point (backward compatible)
 python3 data_pwn.py -t example.com
+
+# Or use the clean modular entry point
+python3 main.py -t example.com
 
 # You'll see the banner and main menu
 ```
@@ -83,10 +83,22 @@ python3 data_pwn.py -t 192.168.1.100 -a --stealth
 
 ## 💻 Command Line Interface
 
+### Entry Points
+
+Data Pwn v2.0 provides two entry points:
+
+| Entry Point | Description |
+|-------------|-------------|
+| `python3 data_pwn.py` | Original backward-compatible entry point |
+| `python3 main.py` | Clean modular entry point |
+| `python3 -m data_pawn` | Module execution (if installed as a package) |
+
 ### Basic Syntax
 
 ```bash
 python3 data_pwn.py -t <TARGET> [OPTIONS]
+# or
+python3 main.py -t <TARGET> [OPTIONS]
 ```
 
 ### Options Reference
@@ -376,55 +388,36 @@ Allows:
 
 ### Configuration File
 
-Create `config.yaml` for persistent settings:
+All settings live in `config.py` at the project root. Edit it directly:
 
-```yaml
-# Data Pwn Configuration
+```python
+# config.py
+class Config:
+    # Wordlist paths
+    WORDLISTS = {
+        'rockyou': '/usr/share/wordlists/rockyou.txt',
+        'dirbuster': '/usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt',
+    }
 
-# General Settings
-general:
-  output_dir: ./data_pwn_output
-  stealth_mode: false
-  max_threads: 10
-  connection_timeout: 5
+    # Database port mapping
+    DB_PORTS = {
+        3306: 'mysql',
+        5432: 'postgresql',
+        1433: 'mssql',
+        1521: 'oracle',
+        27017: 'mongodb',
+        6379: 'redis',
+        9200: 'elasticsearch'
+    }
 
-# Wordlist Paths
-wordlists:
-  rockyou: /usr/share/wordlists/rockyou.txt
-  dirbuster: /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt
-  subdomains: /usr/share/wordlists/SecLists/Discovery/DNS/subdomains-top1million-110000.txt
-  unix_users: /usr/share/wordlists/metasploit/unix_users.txt
-  windows_users: /usr/share/wordlists/metasploit/windows_users.txt
-
-# Attack Settings
-attack:
-  sqlmap_level: 3
-  sqlmap_risk: 2
-  brute_force_delay: 2
-  max_attempts: 1000
-
-# Database Settings
-database:
-  mysql_timeout: 10
-  postgres_timeout: 10
-  mssql_timeout: 10
-
-# Report Settings
-report:
-  include_sensitive_data: true
-  include_recommendations: true
-  format: markdown  # markdown, html, pdf
+    # Sensitive files to check on web servers
+    SENSITIVE_FILES = [
+        '.env', '.env.local', 'config.php', 'wp-config.php',
+        'settings.py', 'appsettings.json', 'backup.sql', 'dump.sql'
+    ]
 ```
 
-### Using Configuration File
-
-```bash
-# Use config file
-python3 data_pwn.py -t example.com --config config.yaml
-
-# Override specific settings
-python3 data_pwn.py -t example.com --set stealth_mode=true
-```
+> **Tip**: You no longer need to edit `data_pwn.py` itself — all config is in one place.
 
 ---
 
@@ -465,12 +458,25 @@ EOF
 
 #### Using Custom Wordlists
 
-```python
-# In data_pwn.py
-Config.WORDLISTS['custom'] = '/path/to/your/wordlist.txt'
+Edit `Config.WORDLISTS` in `config.py`:
 
-# Or use command line
-python3 data_pwn.py -t example.com --wordlist /path/to/wordlist.txt
+```python
+# config.py
+class Config:
+    WORDLISTS = {
+        'rockyou': '/path/to/your/wordlist.txt',
+        ...
+    }
+```
+
+Or use the `WordlistManager` programmatically:
+
+```python
+from utils.wordlists import WordlistManager
+
+wl = WordlistManager()
+print(wl.available())         # See which lists exist on disk
+words = wl.load('rockyou')    # Returns a list of strings
 ```
 
 ### Wordlist Recommendations
@@ -852,35 +858,54 @@ python3 data_pwn.py -t example.com --report --recommendations
 
 ## 🔬 Advanced Usage
 
-### Custom Attack Scripts
+### Importing Modules Directly
+
+With v2.0's modular structure, you can import and use individual modules in your own scripts:
 
 ```python
 # custom_attack.py
-from data_pwn import DataPwn, Config
+from core.base import DataPwn
+from core.scanner import Scanner
+from core.reporter import Logger
+from modules.external.recon import ExternalRecon
+from modules.external.web import WebAttacks
+from modules.external.services import ServiceAttacks
+from modules.internal.discovery import InternalDiscovery
+from modules.internal.pivot import PivotAttacks
+from modules.internal.priv_esc import PrivEsc
+from modules.extraction.databases import DatabaseExtraction
+from modules.extraction.files import FileExtraction
+from utils.network import resolve_ip, is_port_open
+from utils.wordlists import WordlistManager
+from config import Config
 
-class CustomAttack:
-    def __init__(self, target):
-        self.target = target
-        self.tool = DataPwn()
-        self.tool.setup(target)
-    
-    def run(self):
-        # Custom reconnaissance
-        self.custom_recon()
-        
-        # Custom web attacks
-        self.custom_web()
-        
-        # Custom data extraction
-        self.custom_extract()
-    
-    def custom_recon(self):
-        # Add your custom recon logic
-        pass
-    
-    def custom_web(self):
-        # Add your custom web attack logic
-        pass
+# Example: stand-alone port scan
+logger = Logger('/tmp/my_scan')
+scanner = Scanner('example.com', stealth_mode=False, logger=logger)
+ports = scanner.fast_port_scan()
+print(ports)
+
+# Example: stand-alone web attack
+web = WebAttacks('example.com', '/tmp/out', logger, kali_available=False)
+web.check_exposed_files()
+
+# Example: internal discovery
+disc = InternalDiscovery('192.168.1.1', stealth_mode=False, logger=logger)
+live = disc.ping_sweep('192.168.1')
+
+# Example: privesc checks on localhost
+pe = PrivEsc('/tmp/pe_results', logger)
+pe.linux_checks()
+```
+
+### Full Controller (DataPwn)
+
+```python
+from core.base import DataPwn
+
+tool = DataPwn()
+tool.setup('example.com', stealth=True)
+tool.full_attack()
 ```
 
 ### Integration with Other Tools
@@ -987,8 +1012,8 @@ A: Report them securely and delete them after testing. Never share them publicly
 
 ### Contact
 
-- **Email**: [EMAIL_ADDRESS]
-- **Twitter**: @DataPwnTool
+- **Email**: lab@hackura.app
+- **Twitter**: @HackuraLabs
 - **GitHub**: github.com/Hackura-Labs/data_pwn
 
 ---
@@ -997,6 +1022,6 @@ A: Report them securely and delete them after testing. Never share them publicly
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: January 2026  
-**Next Update**: March 2026
+**Version**: 2.0.0  
+**Last Updated**: June 2026  
+**Architecture**: Modular Python Package

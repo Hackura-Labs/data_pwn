@@ -10,6 +10,7 @@ data_pwn_*/
 *.sql
 *.dump
 *db.json
+*.html
 
 # IDE
 .vscode/
