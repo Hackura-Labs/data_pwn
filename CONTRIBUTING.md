@@ -40,6 +40,7 @@ data_pawn/
 
 ## 🚀 Quick Contribution Guide
 
+<<<<<<< HEAD
 1. **Fork** the repo on GitHub
 2. **Clone** your fork: `git clone https://github.com/Hackura-Labs/data_pwn.git && cd data_pwn`
 3. **Create** a branch: `git checkout -b feature/my-feature`
@@ -181,6 +182,8 @@ Open a GitHub Issue with:
 
 ## ❓ Questions?
 
+=======
+>>>>>>> 4d1ee7ce20c00a4b39ee3d512eeb323bccb47bff
 Open an issue or email: lab@hackura.app
 
 **Thank you for contributing!** 🚀
