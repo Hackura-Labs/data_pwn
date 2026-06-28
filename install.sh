@@ -165,9 +165,15 @@ echo ""
 # ============================================================
 
 echo -e "${YELLOW}[*] Would you like to install common wordlists? (optional)${NC}"
-read -p "Install wordlists? (y/n): " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
+INSTALL_WORDLISTS="n"
+if [ -t 0 ]; then
+    read -p "Install wordlists? (y/n): " -n 1 -r
+    echo
+    INSTALL_WORDLISTS="$REPLY"
+else
+    echo -e "${YELLOW}⚠ Non-interactive shell detected - skipping wordlist prompt${NC}"
+fi
+if [[ $INSTALL_WORDLISTS =~ ^[Yy]$ ]]; then
     echo -e "${YELLOW}[*] Installing wordlists...${NC}"
     
     # Check if SecLists is available
