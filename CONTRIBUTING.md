@@ -27,6 +27,6 @@
 
 ## Questions?
 
-Open an issue or email: support@datapwn.com
+Open an issue or email: lab@hackura.app
 
 **Thank you for contributing!** 🚀
